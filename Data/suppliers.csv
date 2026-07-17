@@ -1,0 +1,7 @@
+Supplier_ID,Supplier_Name,Category,Amount,Due_Date,Status
+SUP001,Jordan Foods Ltd,Food Supplies,8500,1/15/2026,Paid
+SUP002,Fresh Market Co,Frozen Foods,6200,1/18/2026,Pending
+SUP003,Green Farm,Vegetables,3100,1/22/2026,Paid
+SUP004,Al Noor Trading,Beverages,5200,1/25/2026,Pending
+SUP005,Smart Packaging,Packaging,1700,1/28/2026,Paid
+SUP006,Royal Logistics,Transportation,2800,1/30/2026,Pending

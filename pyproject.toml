@@ -1,0 +1,8 @@
+[project]
+name = "cfo-ai-platform"
+version = "0.1.0"
+description = "Enterprise Financial Intelligence Platform"
+requires-python = ">=3.10"
+
+[tool.setuptools.packages.find]
+where = ["."]

@@ -1,0 +1,11 @@
+Transaction_ID,Date,Type,Category,Description,Amount,Balance
+TX001,1/1/2026,Income,Sales,Customer Payment,12500,95000
+TX002,1/2/2026,Expense,Supplier,Supplier Payment,-8500,86500
+TX003,1/3/2026,Expense,Salary,Payroll,-8100,78400
+TX004,1/4/2026,Expense,Rent,Warehouse Rent,-3500,74900
+TX005,1/5/2026,Income,Sales,Customer Payment,14800,89700
+TX006,1/6/2026,Expense,Fuel,Truck Fuel,-1450,88250
+TX007,1/7/2026,Income,Sales,Customer Payment,13200,101450
+TX008,1/8/2026,Expense,Marketing,Facebook Ads,-950,100500
+TX009,1/9/2026,Income,Sales,Customer Payment,17100,117600
+TX010,1/10/2026,Expense,Utilities,Electricity Bill,-820,116780
