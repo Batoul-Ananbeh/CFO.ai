@@ -1,0 +1,1 @@
+"""Prompt resources used by CFO.ai intelligent agents."""
