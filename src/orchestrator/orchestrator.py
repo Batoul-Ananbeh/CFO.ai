@@ -5,8 +5,8 @@ from __future__ import annotations
 from typing import Any
 
 from src.orchestrator.context import ExecutionContext
+from src.orchestrator.contracts import ExecutionPlanner
 from src.orchestrator.dispatcher import Dispatcher
-from src.orchestrator.planner import Planner
 
 
 class Orchestrator:
@@ -15,7 +15,7 @@ class Orchestrator:
     def __init__(
         self,
         *,
-        planner: Planner,
+        planner: ExecutionPlanner,
         dispatcher: Dispatcher,
     ) -> None:
         self._planner = planner
@@ -38,23 +38,31 @@ class Orchestrator:
             results=dict(initial_results or {}),
         )
 
-        plan = self._planner.plan(normalized_request)
+        execution_plan = self._planner.plan(
+            normalized_request
+        )
 
         return self._dispatcher.dispatch(
-            plan=plan,
+            plan=execution_plan,
             context=context,
         )
 
     @staticmethod
-    def _normalize_request(request: str) -> str:
+    def _normalize_request(
+        request: str,
+    ) -> str:
         """Validate and normalize a user request."""
 
         if not isinstance(request, str):
-            raise TypeError("Request must be a string.")
+            raise TypeError(
+                "Request must be a string."
+            )
 
         normalized_request = request.strip()
 
         if not normalized_request:
-            raise ValueError("Request cannot be empty.")
+            raise ValueError(
+                "Request cannot be empty."
+            )
 
         return normalized_request
