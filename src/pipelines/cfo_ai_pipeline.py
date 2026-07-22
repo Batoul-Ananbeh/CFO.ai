@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from src.agents.chief_cfo_ai_agent import ChiefCFOAIAgent
 from src.agents.controller_ai_agent import ControllerAIAgent
 from src.agents.forecast_ai_agent import ForecastAIAgent
@@ -21,6 +19,10 @@ from src.agents.orchestrator_ai_adapters import (
 from src.agents.risk_ai_agent import RiskAIAgent
 from src.agents.strategy_ai_agent import StrategyAIAgent
 from src.ai.provider import LLMProvider
+from src.orchestrator.contracts import ExecutionPlanner
+from src.orchestrator.factory import build_dynamic_orchestrator
+from src.orchestrator.orchestrator import Orchestrator
+from src.orchestrator.registry import AgentRegistry
 
 
 CFO_AI_EXECUTION_PLAN = [
@@ -34,12 +36,7 @@ CFO_AI_EXECUTION_PLAN = [
 
 
 class CFOAIPlanner:
-    """
-    Planner for the complete CFO.ai specialized-agent pipeline.
-
-    Deterministic General Ledger and Controller results are expected
-    to already exist in the initial ExecutionContext.
-    """
+    """Planner for the complete fixed CFO AI pipeline."""
 
     def plan(
         self,
@@ -51,20 +48,10 @@ class CFOAIPlanner:
 
 
 def configure_cfo_ai_registry(
-    registry: Any,
+    registry: AgentRegistry,
     provider: LLMProvider,
-) -> Any:
-    """
-    Register the complete CFO.ai AI pipeline.
-
-    The registry object must support:
-
-        registry.register(
-            name=...,
-            agent=...,
-            required_inputs=...,
-        )
-    """
+) -> AgentRegistry:
+    """Register the real CFO.ai AI agents and adapters."""
 
     general_ledger_ai = GeneralLedgerAIAgent(
         provider=provider,
@@ -98,6 +85,9 @@ def configure_cfo_ai_registry(
         required_inputs={
             "general_ledger",
         },
+        capabilities={
+            "general_ledger_explanation",
+        },
     )
 
     registry.register(
@@ -110,6 +100,9 @@ def configure_cfo_ai_registry(
             "general_ledger_ai",
             "controller",
         },
+        capabilities={
+            "controller_review",
+        },
     )
 
     registry.register(
@@ -118,8 +111,13 @@ def configure_cfo_ai_registry(
             ai_agent=risk_ai,
         ),
         required_inputs={
+            "general_ledger",
             "controller",
             "controller_ai",
+        },
+        capabilities={
+            "risk_analysis",
+            "internal_audit",
         },
     )
 
@@ -129,7 +127,12 @@ def configure_cfo_ai_registry(
             ai_agent=forecast_ai,
         ),
         required_inputs={
+            "general_ledger",
+            "controller",
             "risk_ai",
+        },
+        capabilities={
+            "forecast_analysis",
         },
     )
 
@@ -142,6 +145,9 @@ def configure_cfo_ai_registry(
             "risk_ai",
             "forecast_ai",
         },
+        capabilities={
+            "financial_strategy",
+        },
     )
 
     registry.register(
@@ -150,12 +156,48 @@ def configure_cfo_ai_registry(
             ai_agent=chief_cfo_ai,
         ),
         required_inputs={
+            "general_ledger",
             "general_ledger_ai",
+            "controller",
             "controller_ai",
             "risk_ai",
             "forecast_ai",
             "strategy_ai",
         },
+        capabilities={
+            "executive_cfo_brief",
+        },
     )
 
     return registry
+
+
+def build_cfo_ai_orchestrator(
+    *,
+    provider: LLMProvider,
+    planner: ExecutionPlanner | None = None,
+    registry: AgentRegistry | None = None,
+) -> Orchestrator:
+    """
+    Build the real CFO.ai dynamic multi-agent orchestrator.
+
+    The supplied provider may be Gemini in production or a fake
+    provider during offline tests.
+    """
+
+    selected_registry = (
+        registry
+        if registry is not None
+        else AgentRegistry()
+    )
+
+    configure_cfo_ai_registry(
+        registry=selected_registry,
+        provider=provider,
+    )
+
+    return build_dynamic_orchestrator(
+        registry=selected_registry,
+        planner=planner,
+        validate_registry=True,
+    )
