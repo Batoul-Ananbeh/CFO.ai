@@ -29,7 +29,7 @@ def create_controller_node(
         )
 
         result = agent.review(
-            report_type=ReportType.TRIAL_BALANCE,
+            report_type=ReportType.JOURNAL_ENTRY,
             input_data=controller_input,
             correlation_id=state["correlation_id"],
         )

@@ -17,6 +17,9 @@ from src.database.models import (
     Branch,
     Company,
 )
+from src.database.repositories.errors import (
+    DuplicateRecordError,
+)
 from src.database.unit_of_work import (
     PersistenceUnitOfWork,
 )
@@ -174,6 +177,35 @@ class AnalysisPersistenceService:
             )
 
             return analysis.id
+
+    def ensure_correlation_id_available(
+        self,
+        correlation_id: str,
+    ) -> None:
+        """
+        Reject a duplicate analysis before deterministic or AI execution.
+
+        The database unique constraint remains the final protection against
+        concurrent requests that pass this preflight check at the same time.
+        """
+
+        normalized_correlation_id = self._required_text(
+            correlation_id,
+            field_name="Correlation ID",
+        )
+
+        with self._unit_of_work_factory() as unit_of_work:
+            existing_analysis = (
+                unit_of_work.analyses.get_by_correlation_id(
+                    normalized_correlation_id
+                )
+            )
+
+            if existing_analysis is not None:
+                raise DuplicateRecordError(
+                    "Analysis correlation ID "
+                    f"{normalized_correlation_id!r} already exists."
+                )
 
     def _persist_agent_executions(
         self,

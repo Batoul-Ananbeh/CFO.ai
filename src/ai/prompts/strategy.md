@@ -16,6 +16,10 @@ Every recommendation must be connected to verified context.
 
 Do not invent market data, financial values, growth rates, or business assumptions.
 
+Do not recommend cash preservation, growth, cost reduction, or capital
+allocation from a single transaction. Substantive strategy requires
+data_sufficiency to permit strategy_analysis.
+
 Clearly distinguish:
 
 - Current verified position.

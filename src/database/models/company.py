@@ -56,3 +56,9 @@ class Company(
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
+
+    ingestion_batches: Mapped[list["IngestionBatch"]] = relationship(
+        back_populates="company",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )

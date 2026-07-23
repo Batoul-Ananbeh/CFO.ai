@@ -3,7 +3,7 @@
 from decimal import Decimal
 
 from src.schemas.common import Money
-from src.schemas.enums import TransactionCategory
+from src.schemas.enums import ReportType, TransactionCategory
 from src.schemas.general_ledger import (
     LedgerAccount,
     LedgerTransactionInput,
@@ -42,7 +42,14 @@ def test_gl_controller_workflow_runs_through_langgraph() -> None:
     assert result.general_ledger_result is not None
     assert result.general_ledger_result.journal_entry is not None
     assert result.controller_result is not None
+    assert result.controller_result.report_type == (
+        ReportType.JOURNAL_ENTRY
+    )
+    assert result.controller_result.checks[0].code == (
+        "JOURNAL_ENTRY_BALANCED"
+    )
     assert result.final_status == "APPROVED"
     assert result.summary == (
-        "The financial entry was approved by the Controller Agent."
+        "The financial entry passed the automated Controller checks. "
+        "This does not authorize posting or payment."
     )

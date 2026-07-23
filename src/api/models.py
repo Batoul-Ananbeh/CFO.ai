@@ -35,3 +35,32 @@ class AgentCatalogResponse(BaseModel):
 
     agents: list[AgentDescriptor]
     total: int
+
+
+class APIConflictResponse(BaseModel):
+    """Public response for a duplicate idempotency key."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    code: Literal["DUPLICATE_CORRELATION_ID"]
+    message: str
+    correlation_id: str
+
+
+class ReadinessComponent(BaseModel):
+    """Readiness state for one external or internal component."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    status: Literal["ready", "not_ready"]
+    detail: str
+
+
+class ReadinessResponse(BaseModel):
+    """Operational readiness of the CFO.ai service."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    status: Literal["ready", "not_ready"]
+    service: str
+    components: dict[str, ReadinessComponent]

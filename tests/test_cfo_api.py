@@ -391,8 +391,20 @@ def test_api_runs_complete_cfo_report():
     payload = response.json()
 
     assert payload["status"] == "COMPLETED"
-    assert len(payload["executed_agents"]) == 6
-    assert len(provider.requests) == 6
+    assert payload["executed_agents"] == [
+        "general_ledger_ai",
+        "controller_ai",
+        "risk_ai",
+        "chief_cfo_ai",
+    ]
+    assert len(provider.requests) == 4
+
+    assert payload["verified_results"][
+        "data_sufficiency"
+    ]["restricted_analysis"] == [
+        "forecast_analysis",
+        "strategy_analysis",
+    ]
 
     assert payload["final_agent"] == (
         "chief_cfo_ai"

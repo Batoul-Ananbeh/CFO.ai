@@ -12,6 +12,7 @@ from src.database.repositories import (
     AuditLogRepository,
     BranchRepository,
     CompanyRepository,
+    IngestionRepository,
 )
 from src.database.session import (
     SessionFactory,
@@ -39,6 +40,7 @@ class PersistenceUnitOfWork:
         self.analyses: AnalysisRepository
         self.agent_executions: AgentExecutionRepository
         self.audit_logs: AuditLogRepository
+        self.ingestion: IngestionRepository
 
     def __enter__(
         self,
@@ -66,6 +68,9 @@ class PersistenceUnitOfWork:
         )
 
         self.audit_logs = AuditLogRepository(
+            self.session
+        )
+        self.ingestion = IngestionRepository(
             self.session
         )
 

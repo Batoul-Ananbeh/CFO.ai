@@ -303,8 +303,20 @@ def test_runtime_executes_complete_cfo_report():
     )
 
     assert result.status is HybridRuntimeStatus.COMPLETED
-    assert len(result.executed_agents) == 6
-    assert len(provider.requests) == 6
+    assert result.execution_plan == (
+        "general_ledger_ai",
+        "controller_ai",
+        "risk_ai",
+        "chief_cfo_ai",
+    )
+    assert result.executed_agents == result.execution_plan
+    assert len(provider.requests) == 4
+    assert result.verified_results[
+        "data_sufficiency"
+    ]["restricted_analysis"] == [
+        "forecast_analysis",
+        "strategy_analysis",
+    ]
 
     payload = result.to_dict()
 
@@ -315,6 +327,37 @@ def test_runtime_executes_complete_cfo_report():
     ]["executive_summary"] == (
         "The verified financial position is stable."
     )
+
+
+def test_runtime_allows_broader_agents_with_verified_capabilities():
+    provider = FakeHybridProvider()
+
+    runtime = UnifiedCFORuntime(
+        deterministic_runner=FakeDeterministicRunner(
+            {
+                **verified_results(),
+                "data_profile": {
+                    "validation_status": "VERIFIED",
+                    "verified_capabilities": [
+                        "multi_period_financial_history",
+                        "company_level_financial_context",
+                    ],
+                },
+            }
+        ),
+        provider=provider,
+    )
+
+    result = runtime.run(
+        "Prepare a complete CFO report with forecast and strategy.",
+        financial_input={
+            "company_id": "COMPANY-001",
+        },
+    )
+
+    assert result.status is HybridRuntimeStatus.COMPLETED
+    assert len(result.executed_agents) == 6
+    assert len(provider.requests) == 6
 
 
 def test_runtime_returns_partial_when_verified_data_is_missing():

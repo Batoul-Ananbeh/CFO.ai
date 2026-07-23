@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from sqlalchemy import inspect, text
-
+from src.database.readiness import (
+    check_database_readiness,
+)
 from src.database.session import (
     create_database_engine,
 )
@@ -12,17 +13,7 @@ from src.database.settings import (
 )
 
 
-EXPECTED_TABLES = {
-    "companies",
-    "branches",
-    "analyses",
-    "agent_executions",
-    "audit_logs",
-    "alembic_version",
-}
-
-
-def main() -> None:
+def main() -> int:
     """Connect to PostgreSQL and verify the migrated schema."""
 
     settings = DatabaseSettings.from_env()
@@ -36,40 +27,36 @@ def main() -> None:
     )
 
     try:
-        with engine.connect() as connection:
-            result = connection.scalar(
-                text("SELECT 1")
-            )
-
-        table_names = set(
-            inspect(engine).get_table_names()
+        result = check_database_readiness(
+            engine
         )
 
-        print(f"Connection result: {result}")
+        print(
+            "Connection: "
+            + (
+                "ready"
+                if result.connection_ok
+                else "not ready"
+            )
+        )
+        print(
+            "Alembic: "
+            f"current={result.current_revision or 'NONE'}, "
+            f"head={result.head_revision or 'UNKNOWN'}"
+        )
         print("Tables:")
 
         for table_name in sorted(
-            table_names
+            result.tables
         ):
             print(f"- {table_name}")
 
-        missing_tables = (
-            EXPECTED_TABLES - table_names
-        )
-
-        if missing_tables:
-            raise RuntimeError(
-                "Missing expected tables: "
-                + ", ".join(
-                    sorted(missing_tables)
-                )
-            )
-
-        print("Database schema is ready.")
+        print(result.detail)
+        return 0 if result.ready else 1
 
     finally:
         engine.dispose()
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

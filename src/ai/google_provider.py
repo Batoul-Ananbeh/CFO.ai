@@ -37,6 +37,8 @@ _RETRYABLE_STATUS_CODES = {
     504,
 }
 
+_STRUCTURED_RESPONSE_ATTEMPTS = 2
+
 
 class GoogleGenAIProvider(LLMProvider):
     """Google Gemini provider using the official Gen AI SDK."""
@@ -259,40 +261,56 @@ class GoogleGenAIProvider(LLMProvider):
         request: AIRequest,
         output_schema: type[OutputModel],
     ) -> OutputModel:
-        response = self._call_generate_content(
-            request=request,
-            output_schema=output_schema,
-        )
+        last_error: Exception | None = None
 
-        self._capture_metadata(response)
-
-        try:
-            if response.parsed is not None:
-                if isinstance(
-                    response.parsed,
-                    output_schema,
-                ):
-                    return response.parsed
-
-                return output_schema.model_validate(
-                    response.parsed
-                )
-
-            if not response.text:
-                raise AIProviderResponseError(
-                    "Gemini returned an empty structured response.",
-                    provider=self.settings.provider,
-                    retryable=False,
-                )
-
-            return output_schema.model_validate_json(
-                response.text
+        for _attempt in range(
+            _STRUCTURED_RESPONSE_ATTEMPTS
+        ):
+            response = self._call_generate_content(
+                request=request,
+                output_schema=output_schema,
             )
-        except AIProviderResponseError:
-            raise
-        except Exception as exc:
-            raise AIProviderResponseError(
-                "Gemini returned an invalid structured response.",
-                provider=self.settings.provider,
-                retryable=False,
-            ) from exc
+
+            self._capture_metadata(response)
+
+            try:
+                return self._parse_structured_response(
+                    response=response,
+                    output_schema=output_schema,
+                )
+            except Exception as exc:
+                last_error = exc
+
+        raise AIProviderResponseError(
+            "Gemini returned an invalid structured response after retry.",
+            provider=self.settings.provider,
+            retryable=False,
+        ) from last_error
+
+    def _parse_structured_response(
+        self,
+        *,
+        response: Any,
+        output_schema: type[OutputModel],
+    ) -> OutputModel:
+        """Validate one structured Gemini response."""
+
+        if response.parsed is not None:
+            if isinstance(
+                response.parsed,
+                output_schema,
+            ):
+                return response.parsed
+
+            return output_schema.model_validate(
+                response.parsed
+            )
+
+        if not response.text:
+            raise ValueError(
+                "Gemini returned an empty structured response."
+            )
+
+        return output_schema.model_validate_json(
+            response.text
+        )

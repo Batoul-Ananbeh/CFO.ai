@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 from src.agents.controller_explanation import explain_controller_result
-from src.engines.controller_validation_engine import validate_trial_balance
+from src.engines.controller_validation_engine import (
+    validate_journal_entry_balance,
+    validate_trial_balance,
+)
 from src.schemas.controller import ControllerResult, TrialBalanceInput
 from src.schemas.enums import ReportType
 
@@ -51,6 +54,12 @@ class FinancialControllerAgent:
 
         if report_type == ReportType.TRIAL_BALANCE:
             return self.review_trial_balance(
+                input_data=input_data,
+                correlation_id=correlation_id,
+            )
+
+        if report_type == ReportType.JOURNAL_ENTRY:
+            return validate_journal_entry_balance(
                 input_data=input_data,
                 correlation_id=correlation_id,
             )

@@ -252,8 +252,20 @@ def test_service_runs_complete_cfo_report():
         HybridRuntimeStatus.COMPLETED
     )
 
-    assert len(response.executed_agents) == 6
-    assert len(provider.requests) == 6
+    assert response.executed_agents == [
+        "general_ledger_ai",
+        "controller_ai",
+        "risk_ai",
+        "chief_cfo_ai",
+    ]
+    assert len(provider.requests) == 4
+
+    assert response.verified_results[
+        "data_sufficiency"
+    ]["restricted_analysis"] == [
+        "forecast_analysis",
+        "strategy_analysis",
+    ]
 
     assert response.final_agent == (
         "chief_cfo_ai"

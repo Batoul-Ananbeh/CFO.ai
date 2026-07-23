@@ -161,8 +161,6 @@ def configure_cfo_ai_registry(
             "controller",
             "controller_ai",
             "risk_ai",
-            "forecast_ai",
-            "strategy_ai",
         },
         capabilities={
             "executive_cfo_brief",

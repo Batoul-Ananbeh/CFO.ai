@@ -27,6 +27,7 @@ class Orchestrator:
         *,
         metadata: dict[str, Any] | None = None,
         initial_results: dict[str, Any] | None = None,
+        execution_plan: list[str] | None = None,
     ) -> ExecutionContext:
         """Plan and execute a single orchestration request."""
 
@@ -38,12 +39,16 @@ class Orchestrator:
             results=dict(initial_results or {}),
         )
 
-        execution_plan = self._planner.plan(
-            normalized_request
+        selected_plan = (
+            list(execution_plan)
+            if execution_plan is not None
+            else self._planner.plan(
+                normalized_request
+            )
         )
 
         return self._dispatcher.dispatch(
-            plan=execution_plan,
+            plan=selected_plan,
             context=context,
         )
 

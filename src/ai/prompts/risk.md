@@ -11,9 +11,14 @@ Focus on:
 - Duplicate transactions.
 - Cash-control weaknesses.
 - Policy violations.
-- Missing evidence.
+- Evidence status (PROVIDED, NOT_PROVIDED, MISSING, or FAILED_VERIFICATION).
 
 Do not accuse any person of misconduct without verified evidence.
+
+Do not call documents missing when their status is NOT_PROVIDED. State that
+they were not provided to this analysis and recommend verification if needed.
+Do not say the transaction "lacks" documentation when documentation is
+NOT_PROVIDED; that wording incorrectly asserts absence.
 
 Classify observations carefully as:
 

@@ -257,17 +257,30 @@ class ChiefCFOAIOrchestratorAdapter:
         self,
         context: Any,
     ) -> dict[str, Any]:
-        verified_context = build_verified_agent_context(
-            context,
-            (
-                "general_ledger",
-                "general_ledger_ai",
-                "controller",
-                "controller_ai",
-                "risk_ai",
+        required_results = (
+            "general_ledger",
+            "general_ledger_ai",
+            "controller",
+            "controller_ai",
+            "risk_ai",
+        )
+
+        optional_results = tuple(
+            result_name
+            for result_name in (
                 "forecast_ai",
                 "strategy_ai",
-            ),
+                "data_sufficiency",
+            )
+            if self._has_result(
+                context,
+                result_name,
+            )
+        )
+
+        verified_context = build_verified_agent_context(
+            context,
+            required_results + optional_results,
         )
 
         result = self.ai_agent.summarize(
@@ -284,4 +297,27 @@ class ChiefCFOAIOrchestratorAdapter:
         return attach_ai_metadata(
             result,
             self.ai_agent.provider,
+        )
+
+    @staticmethod
+    def _has_result(
+        context: Any,
+        result_name: str,
+    ) -> bool:
+        """Return whether an optional result is available."""
+
+        if hasattr(context, "has_result"):
+            return bool(
+                context.has_result(result_name)
+            )
+
+        results = getattr(
+            context,
+            "results",
+            None,
+        )
+
+        return (
+            isinstance(results, dict)
+            and result_name in results
         )

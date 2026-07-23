@@ -12,6 +12,10 @@ from src.pipelines.cfo_ai_pipeline import (
 )
 from src.planning.dynamic_planner import DynamicCFOPlanner
 from src.runtime.contracts import DeterministicFinanceRunner
+from src.runtime.financial_accuracy import (
+    apply_execution_policy,
+    assess_financial_accuracy,
+)
 from src.runtime.models import (
     HybridRuntimeResult,
     HybridRuntimeStatus,
@@ -69,7 +73,7 @@ class UnifiedCFORuntime:
             field_name="Metadata",
         )
 
-        execution_plan = tuple(
+        requested_plan = tuple(
             self._planner.plan(
                 normalized_request
             )
@@ -97,7 +101,7 @@ class UnifiedCFORuntime:
 
             return HybridRuntimeResult(
                 request=normalized_request,
-                execution_plan=execution_plan,
+                execution_plan=requested_plan,
                 executed_agents=(),
                 verified_results={},
                 ai_results={},
@@ -105,10 +109,34 @@ class UnifiedCFORuntime:
                 status=HybridRuntimeStatus.FAILED,
             )
 
+        accuracy_assessment = assess_financial_accuracy(
+            metadata=normalized_metadata,
+            verified_results=verified_results,
+        )
+
+        verified_results["data_sufficiency"] = (
+            accuracy_assessment.as_context()
+        )
+
+        execution_plan = tuple(
+            apply_execution_policy(
+                requested_plan,
+                assessment=accuracy_assessment,
+            )
+        )
+
+        enriched_metadata = {
+            **normalized_metadata,
+            "financial_accuracy_policy": (
+                accuracy_assessment.as_context()
+            ),
+        }
+
         context = self._orchestrator.run(
             normalized_request,
-            metadata=normalized_metadata,
+            metadata=enriched_metadata,
             initial_results=verified_results,
+            execution_plan=list(execution_plan),
         )
 
         executed_agents = tuple(

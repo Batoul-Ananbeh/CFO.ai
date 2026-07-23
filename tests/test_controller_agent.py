@@ -42,6 +42,36 @@ def test_controller_agent_approves_balanced_trial_balance() -> None:
     assert result.balance_difference.amount == Decimal("0")
 
 
+def test_controller_agent_reviews_single_journal_as_journal_entry() -> None:
+    agent = FinancialControllerAgent()
+
+    input_data = TrialBalanceInput(
+        report_id="JRN-AGENT-001",
+        accounting_period="2026-07",
+        total_debit=Money(
+            amount=Decimal("75000"),
+            currency="USD",
+        ),
+        total_credit=Money(
+            amount=Decimal("75000"),
+            currency="USD",
+        ),
+    )
+
+    result = agent.review(
+        report_type=ReportType.JOURNAL_ENTRY,
+        input_data=input_data,
+        correlation_id="CORR-JRN-001",
+    )
+
+    assert result.report_type == ReportType.JOURNAL_ENTRY
+    assert result.checks[0].code == "JOURNAL_ENTRY_BALANCED"
+    assert "trial balance" not in result.summary.lower()
+    assert "trial balance" not in (
+        result.checks[0].details or ""
+    ).lower()
+
+
 def test_controller_agent_rejects_unbalanced_trial_balance() -> None:
     agent = FinancialControllerAgent()
 

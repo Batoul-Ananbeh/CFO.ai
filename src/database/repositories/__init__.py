@@ -15,6 +15,9 @@ from src.database.repositories.branch_repository import (
 from src.database.repositories.company_repository import (
     CompanyRepository,
 )
+from src.database.repositories.ingestion_repository import (
+    IngestionRepository,
+)
 from src.database.repositories.errors import (
     DuplicateRecordError,
     PersistenceError,
@@ -28,6 +31,7 @@ __all__ = [
     "AuditLogRepository",
     "BranchRepository",
     "CompanyRepository",
+    "IngestionRepository",
     "DuplicateRecordError",
     "PersistenceError",
     "RecordNotFoundError",

@@ -9,7 +9,10 @@ def approved_node(state: CFOGraphState) -> dict:
     return {
         "current_step": "approved",
         "final_status": "APPROVED",
-        "summary": "The financial entry was approved by the Controller Agent.",
+        "summary": (
+            "The financial entry passed the automated Controller checks. "
+            "This does not authorize posting or payment."
+        ),
     }
 
 
@@ -20,8 +23,8 @@ def approved_with_warnings_node(state: CFOGraphState) -> dict:
         "current_step": "approved_with_warnings",
         "final_status": "APPROVED_WITH_WARNINGS",
         "summary": (
-            "The financial entry was approved by the Controller Agent "
-            "with warnings."
+            "The financial entry passed the automated Controller checks "
+            "with warnings. This does not authorize posting or payment."
         ),
     }
 

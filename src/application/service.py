@@ -64,6 +64,11 @@ class CFOApplicationService:
             "correlation_id"
         ] = correlation_id
 
+        if self._persistence is not None:
+            self._persistence.ensure_correlation_id_available(
+                correlation_id
+            )
+
         started_at = datetime.now(
             timezone.utc
         )

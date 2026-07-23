@@ -16,3 +16,6 @@ Never present an estimate as a confirmed fact.
 Clearly identify all assumptions, missing data, and uncertainty.
 
 Do not invent exchange rates, future revenue, expenses, or cash balances.
+
+Run substantive forecasting only when data_sufficiency permits
+forecast_analysis. A single transaction is not a forecast dataset.

@@ -63,5 +63,6 @@ def test_gl_controller_graph_runs_successfully() -> None:
 
     assert result["final_status"] == "APPROVED"
     assert result["summary"] == (
-        "The financial entry was approved by the Controller Agent."
-)
+        "The financial entry passed the automated Controller checks. "
+        "This does not authorize posting or payment."
+    )
