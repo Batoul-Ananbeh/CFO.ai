@@ -1,4 +1,4 @@
-"""Result models for the unified CFO runtime."""
+﻿"""Result models for the unified CFO runtime."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
+from src.ai.context_utils import to_json_compatible
 from src.orchestrator.errors import ExecutionError
 
 
@@ -30,21 +31,53 @@ class HybridRuntimeResult:
     status: HybridRuntimeStatus
 
     def to_dict(self) -> dict[str, Any]:
-        """Serialize the runtime result into an API-friendly payload."""
+        """
+        Serialize the complete runtime result.
 
-        return {
+        Converts Pydantic models, Decimal values, enums, tuples,
+        and nested financial objects into JSON-compatible values.
+        """
+
+        payload = {
             "request": self.request,
-            "execution_plan": list(self.execution_plan),
-            "executed_agents": list(self.executed_agents),
-            "verified_results": dict(self.verified_results),
-            "ai_results": dict(self.ai_results),
+            "execution_plan": list(
+                self.execution_plan
+            ),
+            "executed_agents": list(
+                self.executed_agents
+            ),
+            "verified_results": (
+                self.verified_results
+            ),
+            "ai_results": self.ai_results,
             "errors": [
                 {
                     "agent_name": error.agent_name,
                     "message": error.message,
-                    "exception_type": error.exception_type,
+                    "exception_type": (
+                        error.exception_type
+                    ),
+                    "category": error.category.value,
+                    "provider_status_code": (
+                        error.provider_status_code
+                    ),
+                    "retryable": error.retryable,
                 }
                 for error in self.errors
             ],
             "status": self.status.value,
         }
+
+        serialized_payload = to_json_compatible(
+            payload
+        )
+
+        if not isinstance(
+            serialized_payload,
+            dict,
+        ):
+            raise TypeError(
+                "Runtime serialization must produce a dictionary."
+            )
+
+        return serialized_payload

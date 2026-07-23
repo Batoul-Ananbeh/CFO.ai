@@ -50,7 +50,7 @@ class AISettings:
     """Environment-backed AI configuration."""
 
     provider: str = "google"
-    model: str = "gemini-2.5-flash"
+    model: str = "gemini-3.6-flash"
     temperature: float = 0.0
     api_key: str | None = None
     timeout_ms: int = 60_000
@@ -66,7 +66,7 @@ class AISettings:
 
         model = os.getenv(
             "AI_MODEL",
-            "gemini-2.5-flash",
+            "gemini-3.6-flash",
         ).strip()
 
         api_key = (

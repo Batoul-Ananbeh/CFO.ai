@@ -110,11 +110,13 @@ class GoogleGenAIProvider(LLMProvider):
 
         if output_schema is not None:
             config_values.update(
-                {
-                    "response_mime_type": "application/json",
-                    "response_schema": output_schema,
-                }
-            )
+        {
+            "response_mime_type": "application/json",
+            "response_json_schema": (
+                output_schema.model_json_schema()
+            ),
+        }
+    )
 
         return types.GenerateContentConfig(
             **config_values
