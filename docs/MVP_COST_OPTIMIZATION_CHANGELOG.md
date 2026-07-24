@@ -14,13 +14,15 @@
 - Added aggregate token telemetry to the company-report response.
 - Reduced default output-token and retry limits.
 - Made structured-response attempts configurable and defaulted to one.
+- Added configurable Gemini thinking levels and defaulted the MVP to
+  `minimal`.
 - Added Data and Dashboard team handoffs.
 - Added the MVP delivery plan and canonical CSV template.
 - Added raw-data ignore rules.
 
 ## Verification
 
-- Full offline test suite: 175 passed.
+- Full offline test suite: 176 passed.
 - Economy plan: Risk then Chief CFO.
 - Balanced plan: Risk, Forecast, then Chief CFO.
 - Full plan: Risk, Forecast, Strategy, then Chief CFO.

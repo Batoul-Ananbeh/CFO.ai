@@ -34,7 +34,7 @@ python -m pytest -q
 Expected:
 
 ```text
-175 passed
+176 passed
 ```
 
 Then inspect:

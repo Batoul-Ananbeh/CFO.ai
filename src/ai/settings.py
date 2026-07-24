@@ -57,6 +57,7 @@ class AISettings:
     retry_attempts: int = 2
     max_output_tokens: int = 1_024
     structured_response_attempts: int = 1
+    thinking_level: str = "minimal"
 
     @classmethod
     def from_env(cls) -> "AISettings":
@@ -99,6 +100,10 @@ class AISettings:
                 "AI_STRUCTURED_RESPONSE_ATTEMPTS",
                 1,
             ),
+            thinking_level=os.getenv(
+                "AI_THINKING_LEVEL",
+                "minimal",
+            ).strip().lower(),
         )
 
     def validate(self) -> None:
@@ -136,6 +141,16 @@ class AISettings:
         if self.structured_response_attempts < 1:
             raise ValueError(
                 "AI_STRUCTURED_RESPONSE_ATTEMPTS must be at least 1."
+            )
+
+        if self.thinking_level not in {
+            "minimal",
+            "low",
+            "medium",
+            "high",
+        }:
+            raise ValueError(
+                "AI_THINKING_LEVEL must be minimal, low, medium, or high."
             )
 
         if not self.api_key:

@@ -105,6 +105,11 @@ class GoogleGenAIProvider(LLMProvider):
             "max_output_tokens": (
                 self.settings.max_output_tokens
             ),
+            "thinking_config": types.ThinkingConfig(
+                thinking_level=types.ThinkingLevel(
+                    self.settings.thinking_level.upper()
+                )
+            ),
         }
 
         if output_schema is not None:

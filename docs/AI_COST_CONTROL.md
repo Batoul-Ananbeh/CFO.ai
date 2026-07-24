@@ -36,10 +36,16 @@ AI_TEMPERATURE=0
 AI_RETRY_ATTEMPTS=2
 AI_MAX_OUTPUT_TOKENS=1024
 AI_STRUCTURED_RESPONSE_ATTEMPTS=1
+AI_THINKING_LEVEL=minimal
 ```
 
 Increase structured attempts only when response reliability justifies the
 possible extra call.
+
+`minimal` is intended for the deterministic-first MVP, where the model explains
+verified results instead of performing the accounting calculation. Use `low`
+when a report needs more interpretation. Reserve `medium` or `high` for an
+explicitly approved complex analysis because thinking tokens are billable.
 
 ## Measurement
 

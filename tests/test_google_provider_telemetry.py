@@ -93,6 +93,34 @@ def test_google_provider_collects_text_usage_metadata():
     assert result.metadata.usage.total_tokens == 140
 
 
+def test_google_provider_uses_configured_minimal_thinking():
+    response = SimpleNamespace(
+        text="Verified response.",
+        parsed=None,
+        usage_metadata=create_usage(),
+        response_id="response-thinking",
+        model_version="fake-gemini-v1",
+    )
+    provider = GoogleGenAIProvider(
+        settings=create_settings(),
+        client=FakeClient(response),
+    )
+
+    config = provider._build_config(
+        AIRequest(
+            instruction="Use verified data only.",
+            user_input="Explain.",
+            context={},
+        )
+    )
+
+    assert config.thinking_config is not None
+    assert (
+        config.thinking_config.thinking_level.value
+        == "MINIMAL"
+    )
+
+
 def test_google_provider_collects_structured_usage_metadata():
     response = SimpleNamespace(
         text=None,
