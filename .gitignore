@@ -9,3 +9,5 @@ __pycache__/
 .mypy_cache/
 *.zip
 oracle_backup_inventory.json
+Data/raw/
+data/raw/

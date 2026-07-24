@@ -101,16 +101,23 @@ Request:
 ```json
 {
   "correlation_id": "COMPANY-REPORT-001",
-  "request": "Prepare a verified company CFO report."
+  "request": "Prepare a verified company CFO report.",
+  "execution_mode": "economy"
 }
 ```
 
-When the data profile is complete, the report executes:
+Execution modes:
 
-1. Risk AI
-2. Forecast AI
-3. Strategy AI
-4. Chief CFO AI
+- `economy` (default): Risk + Chief CFO, two AI calls.
+- `balanced`: Risk + Forecast + Chief CFO, three AI calls.
+- `full`: Risk + Forecast + Strategy + Chief CFO, four AI calls.
+
+All modes use the same deterministic ingestion and monthly aggregation.
+Changing the mode changes only the AI interpretation depth.
+
+When the data profile is complete, the report executes the plan selected by
+`execution_mode`. Economy runs Risk then Chief CFO. Balanced adds Forecast.
+Full runs Risk, Forecast, Strategy, then Chief CFO.
 
 General Ledger and Controller are not run on monthly aggregate data because
 their current deterministic workflow validates an individual journal entry.

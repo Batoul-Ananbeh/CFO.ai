@@ -19,6 +19,11 @@ Respect data_sufficiency restrictions. If forecast or strategy agents were
 not executed, explain that the evidence threshold was not met; do not recreate
 their analyses yourself.
 
+The verified context may include an execution_policy. When an agent is listed
+as omitted because of the selected cost mode, say it was not run in this
+cost-optimized report. Do not mislabel a cost-policy omission as insufficient
+evidence, and do not recreate the omitted agent's analysis.
+
 Treat automated Controller approval as a passed deterministic control review,
 not as human approval or authorization to post an entry or release payment.
 

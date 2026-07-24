@@ -51,6 +51,7 @@ def create_settings() -> AISettings:
         timeout_ms=60_000,
         retry_attempts=4,
         max_output_tokens=2_048,
+        structured_response_attempts=2,
     )
 
 

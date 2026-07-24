@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -34,6 +34,9 @@ from src.application.persistence import (
 from src.ingestion.aggregation import (
     MonthlyAggregationService,
 )
+from src.ingestion.report_context import (
+    build_company_report_context,
+)
 from src.orchestrator.errors import (
     ExecutionError,
 )
@@ -42,12 +45,32 @@ from src.runtime.models import (
 )
 
 
-_COMPANY_REPORT_PLAN = [
-    "risk_ai",
-    "forecast_ai",
-    "strategy_ai",
-    "chief_cfo_ai",
+CompanyReportExecutionMode = Literal[
+    "economy",
+    "balanced",
+    "full",
 ]
+
+_COMPANY_REPORT_PLANS: dict[
+    CompanyReportExecutionMode,
+    list[str],
+] = {
+    "economy": [
+        "risk_ai",
+        "chief_cfo_ai",
+    ],
+    "balanced": [
+        "risk_ai",
+        "forecast_ai",
+        "chief_cfo_ai",
+    ],
+    "full": [
+        "risk_ai",
+        "forecast_ai",
+        "strategy_ai",
+        "chief_cfo_ai",
+    ],
+}
 
 _REQUIRED_CAPABILITIES = {
     "multi_period_financial_history",
@@ -75,6 +98,7 @@ class CompanyCFOReportRequest(BaseModel):
         ),
         min_length=1,
     )
+    execution_mode: CompanyReportExecutionMode = "economy"
 
 
 class CompanyCFOReportService:
@@ -162,6 +186,9 @@ class CompanyCFOReportService:
                     "analysis_scope": (
                         "company_monthly_aggregation"
                     ),
+                    "ai_execution_mode": (
+                        report_request.execution_mode
+                    ),
                 },
             )
             response.analysis_id = (
@@ -184,15 +211,13 @@ class CompanyCFOReportService:
         ai_results: dict[str, Any] = {}
         executed_agents: list[str] = []
         errors: list[CFOExecutionError] = []
-        base_context = {
-            "monthly_aggregation": verified_results[
-                "monthly_aggregation"
-            ],
-            "data_profile": verified_results[
-                "data_profile"
-            ],
-        }
-        agents = [
+        execution_plan = _COMPANY_REPORT_PLANS[
+            report_request.execution_mode
+        ]
+        base_context = build_company_report_context(
+            verified_results["monthly_aggregation"]
+        )
+        available_agents = {
             (
                 "risk_ai",
                 RiskAIAgent(
@@ -221,14 +246,30 @@ class CompanyCFOReportService:
                 ),
                 "summarize",
             ),
-        ]
+        }
+        agents_by_name = {
+            agent_name: (agent, method_name)
+            for agent_name, agent, method_name in available_agents
+        }
 
-        for agent_name, agent, method_name in agents:
+        for agent_name in execution_plan:
+            agent, method_name = agents_by_name[
+                agent_name
+            ]
             context = {
                 **base_context,
                 "specialized_agent_results": dict(
                     ai_results
                 ),
+                "execution_policy": {
+                    "mode": report_request.execution_mode,
+                    "planned_agents": execution_plan,
+                    "omitted_agents": [
+                        name
+                        for name in _COMPANY_REPORT_PLANS["full"]
+                        if name not in execution_plan
+                    ],
+                },
             }
 
             try:
@@ -284,13 +325,33 @@ class CompanyCFOReportService:
             if executed_agents
             else None
         )
+        verified_results["ai_cost_policy"] = {
+            "execution_mode": report_request.execution_mode,
+            "planned_ai_calls": len(execution_plan),
+            "executed_ai_calls": len(executed_agents),
+            "full_report_ai_calls": len(
+                _COMPANY_REPORT_PLANS["full"]
+            ),
+            "mode_avoided_ai_calls": (
+                len(_COMPANY_REPORT_PLANS["full"])
+                - len(execution_plan)
+            ),
+            "unexecuted_planned_ai_calls": (
+                len(execution_plan)
+                - len(executed_agents)
+            ),
+            "usage": self._usage_summary(ai_results),
+            "context_policy": (
+                base_context["context_policy"]["name"]
+            ),
+        }
 
         return CFOAnalysisResponse(
             request=report_request.request,
             correlation_id=report_request.correlation_id,
             status=status,
             execution_plan=list(
-                _COMPANY_REPORT_PLAN
+                execution_plan
             ),
             executed_agents=executed_agents,
             verified_results=verified_results,
@@ -305,6 +366,60 @@ class CompanyCFOReportService:
             ),
             errors=errors,
         )
+
+    @staticmethod
+    def _usage_summary(
+        ai_results: dict[str, Any],
+    ) -> dict[str, int | None]:
+        fields = (
+            "prompt_tokens",
+            "output_tokens",
+            "total_tokens",
+            "cached_tokens",
+            "thought_tokens",
+        )
+        totals = {
+            field: 0
+            for field in fields
+        }
+        observed = {
+            field: False
+            for field in fields
+        }
+
+        for result in ai_results.values():
+            metadata = (
+                result.get("_ai_metadata")
+                if isinstance(result, dict)
+                else None
+            )
+            usage = (
+                metadata.get("usage")
+                if isinstance(metadata, dict)
+                else None
+            )
+
+            if not isinstance(usage, dict):
+                continue
+
+            for field in fields:
+                value = usage.get(field)
+
+                if isinstance(value, int) and not isinstance(
+                    value,
+                    bool,
+                ):
+                    totals[field] += value
+                    observed[field] = True
+
+        return {
+            field: (
+                totals[field]
+                if observed[field]
+                else None
+            )
+            for field in fields
+        }
 
     @staticmethod
     def _insufficient_data_response(

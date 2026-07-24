@@ -54,8 +54,9 @@ class AISettings:
     temperature: float = 0.0
     api_key: str | None = None
     timeout_ms: int = 60_000
-    retry_attempts: int = 4
-    max_output_tokens: int = 2_048
+    retry_attempts: int = 2
+    max_output_tokens: int = 1_024
+    structured_response_attempts: int = 1
 
     @classmethod
     def from_env(cls) -> "AISettings":
@@ -88,11 +89,15 @@ class AISettings:
             ),
             retry_attempts=_read_int(
                 "AI_RETRY_ATTEMPTS",
-                4,
+                2,
             ),
             max_output_tokens=_read_int(
                 "AI_MAX_OUTPUT_TOKENS",
-                2_048,
+                1_024,
+            ),
+            structured_response_attempts=_read_int(
+                "AI_STRUCTURED_RESPONSE_ATTEMPTS",
+                1,
             ),
         )
 
@@ -126,6 +131,11 @@ class AISettings:
         if self.max_output_tokens < 1:
             raise ValueError(
                 "AI_MAX_OUTPUT_TOKENS must be at least 1."
+            )
+
+        if self.structured_response_attempts < 1:
+            raise ValueError(
+                "AI_STRUCTURED_RESPONSE_ATTEMPTS must be at least 1."
             )
 
         if not self.api_key:

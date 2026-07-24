@@ -178,7 +178,8 @@ def test_complete_dataset_runs_four_agents_and_persists_report():
     response = report.generate(
         batch_id=batch.batch_id,
         report_request=CompanyCFOReportRequest(
-            correlation_id="COMPANY-REPORT-001"
+            correlation_id="COMPANY-REPORT-001",
+            execution_mode="full",
         ),
     )
 
@@ -305,6 +306,7 @@ def test_company_report_api_returns_persisted_analysis():
         f"{batch.batch_id}/cfo-report",
         json={
             "correlation_id": "COMPANY-REPORT-API-001",
+            "execution_mode": "full",
         },
     )
 
@@ -314,5 +316,80 @@ def test_company_report_api_returns_persisted_analysis():
     assert payload["analysis_id"]
     assert payload["final_agent"] == "chief_cfo_ai"
     assert len(payload["executed_agents"]) == 4
+
+    engine.dispose()
+
+
+def test_economy_mode_runs_two_agents_and_reports_avoided_calls():
+    provider = CompanyReportProvider()
+    engine, _, ingestion, report = build_report_system(
+        provider
+    )
+    batch = ingestion.ingest(
+        complete_request()
+    )
+
+    response = report.generate(
+        batch_id=batch.batch_id,
+        report_request=CompanyCFOReportRequest(
+            correlation_id="COMPANY-REPORT-ECONOMY",
+        ),
+    )
+
+    assert response.status == "COMPLETED"
+    assert response.execution_plan == [
+        "risk_ai",
+        "chief_cfo_ai",
+    ]
+    assert response.executed_agents == [
+        "risk_ai",
+        "chief_cfo_ai",
+    ]
+    assert len(provider.requests) == 2
+    policy = response.verified_results[
+        "ai_cost_policy"
+    ]
+    assert policy["execution_mode"] == "economy"
+    assert policy["planned_ai_calls"] == 2
+    assert policy["mode_avoided_ai_calls"] == 2
+    assert policy["unexecuted_planned_ai_calls"] == 0
+
+    chief_context = provider.requests[-1].context
+    assert "company_monthly_summaries" in chief_context
+    assert "branch_currency_totals" in chief_context
+    assert "monthly_aggregation" not in chief_context
+
+    engine.dispose()
+
+
+def test_balanced_mode_runs_three_agents():
+    provider = CompanyReportProvider()
+    engine, _, ingestion, report = build_report_system(
+        provider
+    )
+    batch = ingestion.ingest(
+        complete_request()
+    )
+
+    response = report.generate(
+        batch_id=batch.batch_id,
+        report_request=CompanyCFOReportRequest(
+            correlation_id="COMPANY-REPORT-BALANCED",
+            execution_mode="balanced",
+        ),
+    )
+
+    assert response.status == "COMPLETED"
+    assert response.executed_agents == [
+        "risk_ai",
+        "forecast_ai",
+        "chief_cfo_ai",
+    ]
+    assert len(provider.requests) == 3
+    policy = response.verified_results[
+        "ai_cost_policy"
+    ]
+    assert policy["planned_ai_calls"] == 3
+    assert policy["mode_avoided_ai_calls"] == 1
 
     engine.dispose()

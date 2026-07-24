@@ -37,9 +37,6 @@ _RETRYABLE_STATUS_CODES = {
     504,
 }
 
-_STRUCTURED_RESPONSE_ATTEMPTS = 2
-
-
 class GoogleGenAIProvider(LLMProvider):
     """Google Gemini provider using the official Gen AI SDK."""
 
@@ -88,7 +85,7 @@ class GoogleGenAIProvider(LLMProvider):
             request.context,
             ensure_ascii=False,
             default=str,
-            indent=2,
+            separators=(",", ":"),
         )
 
         return (
@@ -264,7 +261,7 @@ class GoogleGenAIProvider(LLMProvider):
         last_error: Exception | None = None
 
         for _attempt in range(
-            _STRUCTURED_RESPONSE_ATTEMPTS
+            self.settings.structured_response_attempts
         ):
             response = self._call_generate_content(
                 request=request,
