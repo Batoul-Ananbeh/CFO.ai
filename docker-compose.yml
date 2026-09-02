@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: cfo-ai-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-cfo_ai}
+      POSTGRES_USER: ${POSTGRES_USER:-cfo_ai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cfo_ai_dev_password}
+      POSTGRES_INITDB_ARGS: --encoding=UTF8
+
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+
+    volumes:
+      - cfo_ai_postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-cfo_ai} -d ${POSTGRES_DB:-cfo_ai}"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  cfo_ai_postgres_data:
+    name: cfo-ai-postgres-data

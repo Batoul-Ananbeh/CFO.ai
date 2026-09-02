@@ -1,0 +1,13 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.pytest_cache/
+.mypy_cache/
+*.zip
+oracle_backup_inventory.json
+Data/raw/
+data/raw/

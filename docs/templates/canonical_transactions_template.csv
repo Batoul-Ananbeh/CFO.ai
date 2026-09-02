@@ -1,0 +1,1 @@
+transaction_id,transaction_date,accounting_period,transaction_category,description,amount,currency,branch_code,branch_name,debit_account_code,debit_account_name,debit_account_type,credit_account_code,credit_account_name,credit_account_type
